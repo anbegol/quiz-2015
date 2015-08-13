@@ -9,6 +9,7 @@ var methodOverride = require('method-override');
 var session = require('express-session');
 
 var routes = require('./routes/index');
+var sessionController = require('./controllers/session_controller');
 
 var app = express();
 
@@ -36,6 +37,21 @@ app.use(function(req, res, next) {
 	
 	// Hacer visible req.session en las vistas
 	res.locals.session = req.session;
+	next();
+});
+
+// Autologout
+app.use(function(req, res, next) {
+	var timeInactive = 2*60*1000;
+	if(req.session.user && req.session.time){
+		var newDate = new Date();
+		var diffTime = newDate.getTime() - req.session.time;
+		if(diffTime > timeInactive) {
+			delete req.session.user;
+		} else {
+			req.session.time = newDate.getTime();
+		}
+	}
 	next();
 });
 
